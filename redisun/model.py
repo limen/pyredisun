@@ -7,11 +7,14 @@ class Model(object):
     """ Manipulate keys of string type
     """
     def __init__(self):
-        self._redis = StrictRedis()
         self._init_query_builder()
+        self._init_redis_client()
 
     def _init_query_builder(self):
         self._query_builder = querybuilder.QueryBuilder(('greeting','name','date'), ('name','date'), ':')
+
+    def _init_redis_client(self):
+        self._redis = StrictRedis(decode_responses=True)
 
     def xset(self,value, ttl=0, ttl_in_sec=True):
         """ Set multi keys
