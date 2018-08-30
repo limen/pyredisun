@@ -1,7 +1,7 @@
 from redis import StrictRedis
 
-import querybuilder
-from utils import *
+from redisun import querybuilder
+from redisun.utils import *
 
 class Model(object):
     """ Manipulate keys of string type
@@ -170,3 +170,7 @@ class Model(object):
     def __getattr__(self,name):
         self._command = name
         return self._call
+
+if __name__ == '__main__':
+    m = Model()
+    print(dir(m._query_builder))
