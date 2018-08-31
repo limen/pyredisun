@@ -1,4 +1,3 @@
-local vs = {}
 for i,k in ipairs(KEYS) do
   if redis.call('EXISTS',k)==1 then
     local v=nil
@@ -8,15 +7,13 @@ for i,k in ipairs(KEYS) do
       v=redis.call('HGETALL',k)
     end
     if ARGV[2]=='1' then
-      if ARGV[3]=='EX' then
-        ttl=redis.call('TTL',k)
+      if ARGV[3]='1' then
+        return {k,v,redis.call('TTL',k)}
       else
-        ttl=redis.call('PTTL',k)
+        return {k,v,redis.call('PTTL',k)}
       end
-      vs[#vs+1] = {k,v,ttl}
     else
-      vs[#vs+1] = {k,v}
+      return {k,v}
     end
   end
 end
-return vs

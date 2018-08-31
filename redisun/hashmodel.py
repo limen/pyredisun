@@ -9,18 +9,18 @@ class HashModel(Model):
     def _init_query_builder(self):
         self._query_builder = querybuilder.QueryBuilder(['user','name','info'], ['name'], ':')
 
-    def create(self,value,ttl=0,ttl_in_sec=True):
+    def create(self,value,ttl=0):
         """ Create an hash
         Parameters:
         - value <dict>
         """
-        return self._call_create('hash_set',value,ttl,ttl_in_sec)
+        return self._call_create('hash_set',value,ttl)
 
-    def create_xx(self,value,ttl=0,ttl_in_sec=True):
-        return self._call_create('hash_setxx',value,ttl,ttl_in_sec)
+    def create_xx(self,value,ttl=0):
+        return self._call_create('hash_setxx',value,ttl)
 
-    def create_nx(self,value,ttl=0,ttl_in_sec=True):
-        return self._call_create('hash_setnx',value,ttl,ttl_in_sec)
+    def create_nx(self,value,ttl=0):
+        return self._call_create('hash_setnx',value,ttl)
 
     def all(self, fields=[], with_ttl=False):
         """ Get hashes
@@ -29,17 +29,17 @@ class HashModel(Model):
         """
         joined_fields = ','.join([''] + self._wrap_hash_fields(fields) if len(fields)>0 else fields)
         lua = load_lua_script('hash_get_all', (joined_fields,))
-        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, 1 if with_ttl else 0], fields)
+        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, 1 if with_ttl else 0, self._ttl_in], fields)
 
-    def getset_one(self, value, fields=[], ttl=0, ttl_in_sec=True):
+    def getset_one(self, value, fields=[], ttl=0):
         joined_fields = ','.join([''] + self._wrap_hash_fields(fields) if len(fields)>0 else fields)
         hmset_args = ','.join(self._wrap_dict_for_hmset(value))
         lua = load_lua_script('hash_getset_one', (joined_fields,hmset_args))
-        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, ttl, 'EX' if ttl_in_sec else 'PX'], fields)
+        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, ttl, self._ttl_in], fields)
 
-    def _call_create(self,script_name,value,ttl,ttl_in_sec):
+    def _call_create(self,script_name,value,ttl):
         argv = []
-        argv += [ttl, 'EX' if ttl_in_sec else 'PX']
+        argv += [ttl, self._ttl_in]
         arg_order = 2 
         argv_str = ''
         for i,k in enumerate(value):

@@ -7,7 +7,12 @@ end
 if lk~=nil then
   local v=redis.call('GET',lk) 
   if ARGV[1]=='1' then
-    return {lk,v,redis.call('TTL',lk)}
+    if ARGV[2]=='EX' then
+      ttl=redis.call('TTL',lk)
+    else
+      ttl=redis.call('PTTL',lk)
+    end
+    return {lk,v,ttl}
   else
     return {lk,v}
   end

@@ -1,5 +1,8 @@
 import os
 
+TTL_IN_SECOND = 'EX'
+TTL_IN_MILLISECOND = 'PX' 
+
 _lua_path = os.path.dirname(__file__) + '/lua'
 
 def load_lua_script(command,replacements=()):

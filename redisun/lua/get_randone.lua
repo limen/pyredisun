@@ -8,7 +8,12 @@ if #ks>0 then
   local k=ks[math.random(#ks)]
   local v=redis.call('GET',k) 
   if ARGV[1]=='1' then
-    return {k,v,redis.call('TTL',k)}
+    if ARGV[2]=='EX' then
+      ttl=redis.call('TTL',k)
+    else
+      ttl=redis.call('PTTL',k)
+    end
+    return {k,v,ttl}
   else
     return {k,v}
   end
