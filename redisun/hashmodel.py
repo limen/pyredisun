@@ -22,6 +22,20 @@ class HashModel(Model):
     def create_nx(self,value,ttl=0):
         return self._call_create('hash_setnx',value,ttl)
 
+    def first(self, fields=[], with_ttl=False):
+        return self._one('hash_get_first', fields, with_ttl)
+
+    def last(self, fields=[], with_ttl=False):
+        return self._one('hash_get_last', fields, with_ttl)
+
+    def _one(self, script_name, fields, with_ttl):
+        joined_fields = ','.join([''] + self._wrap_hash_fields(fields) if len(fields)>0 else fields)
+        lua = load_lua_script(script_name, (joined_fields,))
+        kvs = self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, 1 if with_ttl else 0, self._ttl_in], fields)
+        for k in kvs:
+            return [k, kvs[k]]
+        return None
+
     def all(self, fields=[], with_ttl=False):
         """ Get hashes
         Parameters:

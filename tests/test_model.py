@@ -1,7 +1,7 @@
 import unittest
 from redisun.model import Model
 
-class TestQuery(unittest.TestCase):
+class TestModel(unittest.TestCase):
     def setUp(self):
         self.model = Model()
         self.model.where_in('name',['alice','bob','cath']).where_in('date',['09-01','09-02'])
