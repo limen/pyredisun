@@ -1,140 +1,87 @@
 from redis import StrictRedis
 
-import querybuilder
-from utils import *
+from redisun import querybuilder
+from redisun.model import Model
+from redisun.utils import *
 
-class Model(object):
-    def __init__(self):
-        self._redis = StrictRedis()
-        self._init_query_builder()
+class HashModel(Model):
 
     def _init_query_builder(self):
-        self._query_builder = querybuilder.QueryBuilder(('greeting','name','date'), ('name','date'), ':')
+        self._query_builder = querybuilder.QueryBuilder(['user','name','info'], ['name'], ':')
 
-    def set(self,value, ttl=0, ttl_in_sec=True):
-        """ Set the key
-        parameters
-        - ttl 0 to keep original ttl, >0 to set new ttl
-        - ttl_in_sec True to set ttl in second, False to set ttl in millisecond
+    def create(self,value,ttl=0,ttl_in_sec=True):
+        """ Create an hash
+        Parameters:
+        - value <dict>
         """
-        keys = self._query_builder.keys()
-        lua = load_lua_script('set')
-        func = self._redis.register_script(lua)
-        return func(keys=keys, args=[value,'EX' if ttl_in_sec else 'PX',ttl])
+        return self._call_create('hash_set',value,ttl,ttl_in_sec)
 
-    def setxx(self,value,ttl=0,ttl_in_sec=True):
-        """ Set the key only if it already exists
-        parameters
-        - ttl 0 to keep original ttl, >0 to set new ttl
-        - ttl_in_sec True to set ttl in second, False to set ttl in millisecond
+    def create_xx(self,value,ttl=0,ttl_in_sec=True):
+        return self._call_create('hash_setxx',value,ttl,ttl_in_sec)
+
+    def create_nx(self,value,ttl=0,ttl_in_sec=True):
+        return self._call_create('hash_setnx',value,ttl,ttl_in_sec)
+
+    def all(self, fields=[], with_ttl=False):
+        """ Get hashes
+        Parameters:
+        - fields <list> the fields you want
         """
-        keys = self._query_builder.keys()
-        lua = load_lua_script('setx')
-        func = self._redis.register_script(lua)
-        return func(keys=keys, args=[value,'EX' if ttl_in_sec else 'PX',ttl,'XX'])
+        joined_fields = ','.join([''] + self._wrap_hash_fields(fields) if len(fields)>0 else fields)
+        lua = load_lua_script('hash_get_all', (joined_fields,))
+        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, 1 if with_ttl else 0], fields)
 
-    def setnx(self,value,ttl=0,ttl_in_sec=True):
-        """ Set the key only if it does not already exist
-        parameters
-        - ttl 0 to keep original ttl, >0 to set new ttl
-        - ttl_in_sec True to set ttl in second, False to set ttl in millisecond
-        """
-        keys = self._query_builder.keys()
-        lua = load_lua_script('setx')
-        func = self._redis.register_script(lua)
-        return func(keys=keys, args=[value,'EX' if ttl_in_sec else 'PX',ttl,'NX'])
+    def getset_one(self, value, fields=[], ttl=0, ttl_in_sec=True):
+        joined_fields = ','.join([''] + self._wrap_hash_fields(fields) if len(fields)>0 else fields)
+        hmset_args = ','.join(self._wrap_dict_for_hmset(value))
+        lua = load_lua_script('hash_getset_one', (joined_fields,hmset_args))
+        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, ttl, 'EX' if ttl_in_sec else 'PX'], fields)
 
-    def update(self, value, ttl=0, ttl_in_sec=True):
-        """ Update the key
-        alias to setxx
-        """
-        return self.setxx(value, ttl, ttl_in_sec)
+    def _call_create(self,script_name,value,ttl,ttl_in_sec):
+        argv = []
+        argv += [ttl, 'EX' if ttl_in_sec else 'PX']
+        arg_order = 2 
+        argv_str = ''
+        for i,k in enumerate(value):
+            argv += [k, value[k]]
+            argv_str += 'ARGV[%s],ARGV[%s],' % (arg_order+1, arg_order+2)
+            arg_order += 2
+        argv_str = argv_str.rstrip(',')
+        lua = load_lua_script(script_name, (argv_str,))
+        return self._invoke_lua_script(lua, self.keys(), argv)
 
-    def first(self, with_ttl=False):
-        key = self._first_key()
-        func = self._redis.register_script(load_lua_script('get'))
-        values = func(keys=[key], args=[1 if with_ttl else 0])
-        return values[0] if len(values)>0 else None
+    def _format_item(self, item, fields=[]):
+        if isinstance(item, str):
+            return item
+        dic = {}
+        i = 0
+        if len(fields)>0:
+            for f in fields:
+                dic[f] = item[i]
+                i += 1
+        else:
+            while i<len(item):
+                dic[item[i]] = item[i+1]
+                i += 2
+        return dic
 
-    def last(self, with_ttl=False):
-        key = self._last_key()
-        func = self._redis.register_script(load_lua_script('get'))
-        values = func(keys=[key], args=[1 if with_ttl else 0])
-        return values[0] if len(values)>0 else None
+    def _wrap_hash_fields(self,fields):
+        return ['\'' + f + '\'' for f in fields]
 
-    def randone(self, with_ttl=False):
-        key = self._random_key()
-        func = self._redis.register_script(load_lua_script('get'))
-        values = func(keys=[key], args=[1 if with_ttl else 0])
-        return values[0] if len(values)>0 else None
-
-    def all(self, with_ttl=False):
-        keys = self._keys()
-        func = self._redis.register_script(load_lua_script('get'))
-        return func(keys=keys, args=[1 if with_ttl else 0])
-
-    def delete(self):
-        keys = self._query_builder.keys()
-        if len(keys) > 0:
-            return self._redis.delete(*keys)
-        return 0
-
-    def where(self,field,value):
-        self._query_builder.where(field,value)
-        return self
-
-    def where_in(self,field,values):
-        self._query_builder.where_in(field,values)
-        return self
-
-    def get_query_builder(self):
-        return self._query_builder
-
-    def getset(self, value, ttl=0, ttl_in_sec=True):
-        key = self._first_key()
-        lua = load_lua_script('getset')
-        func = self._redis.register_script(lua)
-        return func(keys=[key], args=[value,ttl,'EX' if ttl_in_sec else 'PX'])
-
-    def _keys(self):
-        return self._query_builder.keys()
-
-    def _first_key(self):
-        return self._query_builder.first_key()
-
-    def _last_key(self):
-        return self._query_builder.last_key()
-
-    def _random_key(self):
-        return self._query_builder.random_key()
-
-    def _call(self, *argv):
-        return getattr(self._redis, self._command)(self._first_key(),*argv)
-
-    def __getattr__(self,name):
-        self._command = name
-        return self._call
+    def _wrap_dict_for_hmset(self,value):
+        i = 0
+        args = []
+        for k in value:
+            args += ['\'' + k + '\'', '\'' + value[k] + '\'']
+        return args
 
 if __name__ == '__main__':
-    m = Model()
-    m.where('name','alice').where_in('date',['09-01','09-02'])
-#    m.where('name','alice').where_in('date',('09-01','09-02'))
-#    m.hmset({'send_at':'09:00','created_at':'08:59'})
-#    print(m.hgetall())
-#    print(m.hmget('send_at','created_at'))
-#    print(m.ttl())
-#    print(m.delete())
-#    print(m.hmget('send_at','created_at'))
-#    print(m.ttl())
-    print(m.setxx('1234'))
-    print(m.first())
-    print(m.first(True))
-    print(m.last())
-    print(m.last(True))
-    print(m.all())
-    print(m.all(True))
-    print(m.getset('12345', 300))
-#    print(m.getset('hello-alice',100))
-#    print(m.randone(True))
-#    print(m.first(True))
-#    print(m.last(True))
+    hm = HashModel()
+    rs = hm.where('name','alice').create({'name':'alice','date':'09-01'})
+    print(hm.all(['name']))
+    print(hm.getset_one({'name':'bob','age':'22'},['name']))
+    rs = hm.where('name','alice').create_xx({'name':'alice','date':'09-02'})
+    print(hm.all())
+    rs = hm.where('name','alice').create_nx({'name':'alice','date':'09-03'})
+    print(hm.all())
+    print(hm.remove())

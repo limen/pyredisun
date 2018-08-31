@@ -16,7 +16,7 @@ class Model(object):
     def _init_redis_client(self):
         self._redis = StrictRedis(decode_responses=True)
 
-    def xset(self,value, ttl=0, ttl_in_sec=True):
+    def create(self,value, ttl=0, ttl_in_sec=True):
         """ Set multi keys
         parameters
         - ttl 0 to keep original ttl, >0 to set new ttl
@@ -24,13 +24,10 @@ class Model(object):
         Return
         dict {k1:<set rs>,k2:<set rs>,...}
         """
-        keys = self._query_builder.keys()
         lua = load_lua_script('set')
-        func = self._redis.register_script(lua)
-        values = func(keys=keys, args=[value,'EX' if ttl_in_sec else 'PX',ttl])
-        return self._parse_list_to_dict(values)
+        return self._invoke_lua_script(lua,self.keys(),[value,'EX' if ttl_in_sec else 'PX',ttl])
 
-    def xdel(self):
+    def remove(self):
         """ Delete multi keys
         Return:
         int The number of keys that been deleted successfully
@@ -40,7 +37,7 @@ class Model(object):
             return self._redis.delete(*keys)
         return 0
 
-    def set_xx(self,value,ttl=0,ttl_in_sec=True):
+    def create_xx(self,value,ttl=0,ttl_in_sec=True):
         """ Set the key only if it already exists
         parameters
         - ttl 0 to keep original ttl, >0 to set new ttl
@@ -48,13 +45,10 @@ class Model(object):
         Return
         dict {k1:<set rs>,k2:<set rs>,...}
         """
-        keys = self.keys()
         lua = load_lua_script('setx')
-        func = self._redis.register_script(lua)
-        values = func(keys=keys, args=[value,'EX' if ttl_in_sec else 'PX',ttl,'XX'])
-        return self._parse_list_to_dict(values)
+        return self._invoke_lua_script(lua, self.keys(), [value,'EX' if ttl_in_sec else 'PX',ttl,'XX'])
 
-    def set_nx(self,value,ttl=0,ttl_in_sec=True):
+    def create_nx(self,value,ttl=0,ttl_in_sec=True):
         """ Set the key only if it does not already exist
         parameters
         - ttl 0 to keep original ttl, >0 to set new ttl
@@ -62,11 +56,8 @@ class Model(object):
         Return
         dict {k1:<set rs>,k2:<set rs>,...}
         """
-        keys = self.keys()
         lua = load_lua_script('setx')
-        func = self._redis.register_script(lua)
-        values = func(keys=keys, args=[value,'EX' if ttl_in_sec else 'PX',ttl,'NX'])
-        return self._parse_list_to_dict(values)
+        return self._invoke_lua_script(lua,self.keys(),[value,'EX' if ttl_in_sec else 'PX',ttl,'NX'])
 
     def update(self, value, ttl=0, ttl_in_sec=True):
         """ Update the key
@@ -83,10 +74,9 @@ class Model(object):
         Return:
         str|None
         """
-        key = self.first_key()
         lua = load_lua_script('getset_one')
         func = self._redis.register_script(lua)
-        return func(keys=[key], args=[value,ttl,'EX' if ttl_in_sec else 'PX'])
+        return func(keys=[self.first_key()], args=[value,ttl,'EX' if ttl_in_sec else 'PX'])
 
     def getset_all(self, value, ttl=0, ttl_in_sec=True):
         """ Get multi keys and set new value
@@ -97,38 +87,32 @@ class Model(object):
         Retuen:
         dict {k1:v1,k2:v2,...}
         """
-        keys = self.keys()
         lua = load_lua_script('getset_all')
-        func = self._redis.register_script(lua)
-        values = func(keys=keys, args=[value,ttl,'EX' if ttl_in_sec else 'PX'])
-        return self._parse_list_to_dict(values)
+        return self._invoke_lua_script(lua,self.keys(),[value,ttl,'EX' if ttl_in_sec else 'PX'])
 
     def first(self, with_ttl=False):
         """ Get first existed key
         Return
         None|list [key,value,ttl(if wanted)]
         """
-        keys = self.keys()
-        func = self._redis.register_script(load_lua_script('get_first'))
-        return func(keys=keys, args=[1 if with_ttl else 0])
+        lua = load_lua_script('get_first')
+        return self._call_lua_func(lua,self.keys(),[1 if with_ttl else 0])
 
     def last(self, with_ttl=False):
         """ Get last existed key
         Return
         None|list [key,value,ttl(if wanted)]
         """
-        keys = self.keys()
-        func = self._redis.register_script(load_lua_script('get_last'))
-        return func(keys=keys, args=[1 if with_ttl else 0])
+        lua = load_lua_script('get_last')
+        return self._call_lua_func(lua,self.keys(),[1 if with_ttl else 0])
 
     def randone(self, with_ttl=False):
         """ Pick one randomly from existed keys
         Return
         None|list [key,value,ttl(if wanted)]
         """
-        keys = self.keys()
-        func = self._redis.register_script(load_lua_script('get_randone'))
-        return func(keys=keys, args=[1 if with_ttl else 0])
+        lua = load_lua_script('get_randone')
+        return self._call_lua_func(lua,self.keys(),[1 if with_ttl else 0])
 
     def all(self, with_ttl=False):
         """ Get all existed keys
@@ -136,10 +120,8 @@ class Model(object):
         dict {k1:[v1,ttl1],k2:[v2,ttl2],...} when with_ttl=True
         dict {k1:v1,k2:v2,...} when with_ttl=False
         """
-        keys = self.keys()
-        func = self._redis.register_script(load_lua_script('get_all'))
-        items = func(keys=keys, args=[1 if with_ttl else 0])
-        return self._parse_list_to_dict(items)
+        lua = load_lua_script('get_all')
+        return self._invoke_lua_script(lua, self.keys(), [1 if with_ttl else 0])
 
     def where(self,field,value):
         self._query_builder.where(field,value)
@@ -164,11 +146,23 @@ class Model(object):
     def _call(self, *argv):
         return getattr(self._redis, self._command)(self.first_key(),*argv)
 
-    def _parse_list_to_dict(self,items):
+    def _invoke_lua_script(self,script,keys,args,*argv):
+        values = self._call_lua_func(script,keys, args)
+        return self._parse_lua_return(values,*argv)
+
+    def _call_lua_func(self,script,keys,args):
+        func = self._redis.register_script(script)
+        return func(keys=keys, args=args)
+
+    def _parse_lua_return(self,items,*argv):
         dic = {}
         for v in items:
-            dic[v[0]] = ([v[1],v[2]] if len(v)==3 else v[1])
+            item = self._format_item(v[1],*argv)
+            dic[v[0]] = ([item, v[2]] if len(v)==3 else item)
         return dic
+
+    def _format_item(self,item,*argv):
+        return item
 
     def __getattr__(self,name):
         self._command = name
