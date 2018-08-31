@@ -11,7 +11,7 @@ class Model(object):
         self._init_redis_client()
 
     def _init_query_builder(self):
-        self._query_builder = querybuilder.QueryBuilder(('greeting','name','date'), ('name','date'), ':')
+        self._query_builder = querybuilder.QueryBuilder(['greeting','name','date'], ['name','date'], ':')
 
     def _init_redis_client(self):
         self._redis = StrictRedis(decode_responses=True)
