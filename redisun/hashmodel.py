@@ -1,10 +1,10 @@
 from redis import StrictRedis
 
 from redisun import querybuilder
-from redisun.model import Model
+from redisun.stringmodel import StringModel
 from redisun.utils import *
 
-class HashModel(Model):
+class HashModel(StringModel):
 
     def _init_query_builder(self):
         self._query_builder = querybuilder.QueryBuilder(['user','name','info'], ['name'], ':')
