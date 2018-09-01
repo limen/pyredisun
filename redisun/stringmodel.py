@@ -156,6 +156,7 @@ class StringModel(object):
     def _parse_lua_return(self,items,*argv):
         dic = {}
         for v in items:
+            v = [str(x) if isinstance(x,unicode) else x for x in v]
             item = self._format_item(v[1],*argv)
             dic[v[0]] = ([item, v[2]] if len(v)==3 else item)
         return dic

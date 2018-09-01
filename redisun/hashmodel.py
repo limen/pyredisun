@@ -28,6 +28,9 @@ class HashModel(StringModel):
     def last(self, fields=[], with_ttl=False):
         return self._one('hash_get_last', fields, with_ttl)
 
+    def randone(self, fields=[], with_ttl=False):
+        return self._one('hash_get_randone', fields, with_ttl)
+
     def _one(self, script_name, fields, with_ttl):
         joined_fields = ','.join([''] + self._wrap_hash_fields(fields) if len(fields)>0 else fields)
         lua = load_lua_script(script_name, (joined_fields,))
@@ -51,6 +54,12 @@ class HashModel(StringModel):
         lua = load_lua_script('hash_getset_one', (joined_fields,hmset_args))
         return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, ttl, self._ttl_in], fields)
 
+    def getset_all(self, value, fields=[], ttl=0):
+        joined_fields = ','.join([''] + self._wrap_hash_fields(fields) if len(fields)>0 else fields)
+        hmset_args = ','.join(self._wrap_dict_for_hmset(value))
+        lua = load_lua_script('hash_getset_all', (joined_fields,hmset_args))
+        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields)>0 else 0, ttl, self._ttl_in], fields)
+
     def _call_create(self,script_name,value,ttl):
         argv = []
         argv += [ttl, self._ttl_in]
@@ -65,8 +74,11 @@ class HashModel(StringModel):
         return self._invoke_lua_script(lua, self.keys(), argv)
 
     def _format_item(self, item, fields=[]):
-        if isinstance(item, str):
+        if isinstance(item, unicode):
+            return item.decode('utf-8')
+        elif not isinstance(item, list):
             return item
+        item = [str(x) if isinstance(x,unicode) else x for x in item]
         dic = {}
         i = 0
         if len(fields)>0:
@@ -86,7 +98,7 @@ class HashModel(StringModel):
         i = 0
         args = []
         for k in value:
-            args += ['\'' + k + '\'', '\'' + value[k] + '\'']
+            args += ['\'' + k + '\'', '\'' + str(value[k]) + '\'']
         return args
 
 if __name__ == '__main__':

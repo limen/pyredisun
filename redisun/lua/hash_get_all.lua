@@ -8,6 +8,7 @@ for i,k in ipairs(KEYS) do
       v=redis.call('HGETALL',k)
     end
     if ARGV[2]=='1' then
+      local ttl=nil
       if ARGV[3]=='EX' then
         ttl=redis.call('TTL',k)
       else
