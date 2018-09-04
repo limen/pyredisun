@@ -74,11 +74,11 @@ class HashModel(StringModel):
         return self._invoke_lua_script(lua, self.keys(), argv)
 
     def _format_item(self, item, fields=[]):
-        if isinstance(item, unicode):
+        if isinstance(item, bytes):
             return item.decode('utf-8')
         elif not isinstance(item, list):
             return item
-        item = [str(x) if isinstance(x,unicode) else x for x in item]
+        item = [x.decode('utf8') if isinstance(x, bytes) else x for x in item]
         dic = {}
         i = 0
         if len(fields)>0:
