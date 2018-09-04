@@ -7,6 +7,7 @@ class TestHashModel(unittest.TestCase):
         self.model.where_in('name',['alice','bob','cath'])
 
     def test_create(self):
+        self.model.remove()
         keys = self.model.keys()
         self.assertEquals(len(keys),3)
         rs = self.model.create({'age':'22'})
@@ -43,76 +44,83 @@ class TestHashModel(unittest.TestCase):
         last = self.model.last()
         self.assertEquals(last,[keys[len(keys)-2],value])
 
-#    def test_randone(self):
-#        self.model.create('hiredis#2')
-#        keys = self.model.keys()
-#        randone = self.model.randone()
-#        self.assertEquals(randone[1],'hiredis#2')
-#        self.assertTrue(randone[0] in keys)
-#
-#    def test_get_all(self):
-#        self.model.create('hiredis#3')
-#        keys = self.model.keys()
-#        kvs = self.model.all()
-#        for k in keys:
-#            self.assertTrue(k in kvs)
-#            self.assertTrue(kvs[k],[k,'hiredis#3'])
-#        kvs = self.model.all(True)
-#        for k in keys:
-#            self.assertTrue(k in kvs)
-#            self.assertTrue(kvs[k],[k,'hiredis#3',-1])
-#    
-#    def test_create_with_ttl(self):
-#        self.model.create('hiredis#4',100)
-#        keys = self.model.keys()
-#        kvs = self.model.all(True)
-#        for k in keys:
-#            self.assertTrue(k in kvs)
-#            self.assertTrue(kvs[k],[k,'hiredis#4',100])
-#
-#    def test_create_xx(self):
-#        rs = self.model.create_xx('hiredis#5')
-#        for k in self.model.keys():
-#            self.assertEquals(rs[k],'OK')
-#
-#    def test_create_nx(self):
-#        rs = self.model.create_nx('hiredis#5')
-#        for k in self.model.keys():
-#            self.assertEquals(rs[k],None)
-#
-#    def test_getset_one(self):
-#        self.model.remove()
-#        ov = self.model.getset_one('hiredis#6')
-#        self.assertTrue(ov is None)
-#        ov = self.model.getset_one('hiredis#7')
-#        self.assertEquals(ov, 'hiredis#6')
-#        self.assertEquals(self.model.get(),'hiredis#7')
-#
-#    def test_getset_all(self):
-#        self.model.remove()
-#        keys = self.model.keys()
-#        ovs = self.model.getset_all('hiredis#8')
-#        self.assertEquals(len(ovs),6)
-#        for i,k in enumerate(ovs):
-#            self.assertTrue(k in keys)
-#            self.assertTrue(ovs[k] is None)
-#        return
-#        ovs = self.model.getset_all('hiredis#9')
-#        self.assertEquals(len(ovs),6)
-#        for i,k in enumerate(ovs):
-#            self.assertTrue(k in keys)
-#            self.assertEquals(ovs[k], 'hiredis#8')
-#        ovs = self.model.all()
-#        self.assertEquals(len(ovs),6)
-#        for i,k in enumerate(ovs):
-#            self.assertTrue(k in keys)
-#            self.assertEquals(ovs[k], 'hiredis#9')
-#
-#    def test_get_key_field(self):
-#        key = self.model.first_key()
-#        self.assertEquals(self.model.get_key_field(key,'name'),'alice')
-#        self.assertEquals(self.model.get_key_field(key,'date'),'09-01')
+    def test_randone(self):
+        value = {'age':'24'}
+        self.model.create(value)
+        keys = self.model.keys()
+        randone = self.model.randone()
+        self.assertEquals(randone[1]['age'], value['age'])
+        self.assertTrue(randone[0] in keys)
+
+    def test_get_all(self):
+        value = {'age':25,'address':'ca'}
+        self.model.create(value)
+        keys = self.model.keys()
+        kvs = self.model.all()
+        for k in keys:
+            self.assertTrue(k in kvs)
+            self.assertTrue(kvs[k],[k, value])
+        kvs = self.model.all([],True)
+        for k in keys:
+            self.assertTrue(k in kvs)
+            self.assertTrue(kvs[k],[k, value, -1])
+    
+    def test_create_with_ttl(self):
+        value = {'age':'25', 'address':'caa'}
+        self.model.create(value,100)
+        keys = self.model.keys()
+        kvs = self.model.all([],True)
+        for k in keys:
+            self.assertTrue(k in kvs)
+            self.assertTrue(kvs[k],[k,value,100])
+
+    def test_create_xx(self):
+        value = {'age':27, 'address':'caa'}
+        self.model.create(value)
+        rs = self.model.create_xx(value)
+        for k in self.model.keys():
+            self.assertEquals(rs[k], 'OK')
+        self.model.remove()
+        rs = self.model.create_xx(value)
+        for k in self.model.keys():
+            self.assertNotEquals(rs[k], 'OK')
+
+    def test_create_nx(self):
+        value = {'age':27, 'address':'caa'}
+        self.model.remove()
+        rs = self.model.create_nx(value)
+        for k in self.model.keys():
+            self.assertEquals(rs[k], 'OK')
+        self.model.create(value)
+        rs = self.model.create_nx(value)
+        for k in self.model.keys():
+            self.assertNotEquals(rs[k], 'OK')
+
+    def test_getset_one(self):
+        self.model.remove()
+        value = {'age':'27', 'address':'caa'}
+        ov = self.model.getset_one(value)
+        first_key = self.model.first_key()
+        self.assertTrue(bool(ov[first_key]) is False)
+        value1 = {'age':'28', 'address':'caa'}
+        ov = self.model.getset_one(value1)
+        self.assertEquals(ov[first_key], value)
+        self.assertEquals(self.model.first(),[first_key, value1])
+
+    def test_getset_all(self):
+        self.model.remove()
+        keys = self.model.keys()
+        value = {'age': '19', 'address':'ca'}
+        ovs = self.model.getset_all(value)
+        self.assertEquals(len(ovs),3)
+        for i,k in enumerate(ovs):
+            self.assertTrue(k in keys)
+            self.assertTrue(bool(ovs[k]) is False)
+        ovs = self.model.all()
+        self.assertEquals(len(ovs),3)
+        for i,k in enumerate(ovs):
+            self.assertTrue(k in keys)
+            self.assertEquals(ovs[k], value)
 
 if __name__ == '__main__':
     unittest.main()
-
