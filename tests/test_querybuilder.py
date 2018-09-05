@@ -21,7 +21,7 @@ class TestQuery(unittest.TestCase):
     def test_one_dynamic_field(self):
         self.qb.set_all_fields(['greeting', 'name'])
         self.qb.set_dynamic_fields(['name'])
-        self.qb.set_delimeter(':')
+        self.qb.set_delimiter(':')
         self.qb.where_in('name', ['alice', 'bob'])
         keys = self.qb.keys()
         self.assertEquals(keys, ['greeting:alice', 'greeting:bob'])
@@ -34,7 +34,7 @@ class TestQuery(unittest.TestCase):
     def test_two_dynamic_fields(self):
         self.qb.set_all_fields(['greeting', 'name', 'date'])
         self.qb.set_dynamic_fields(['name', 'date'])
-        self.qb.set_delimeter(':')
+        self.qb.set_delimiter(':')
         self.qb.where('name', 'alice')
         self.qb.where_in('date', ['09-01', '09-02'])
         keys = self.qb.keys()
@@ -54,7 +54,7 @@ class TestQuery(unittest.TestCase):
     def test_three_dynamic_fields(self):
         self.qb.set_all_fields(['greeting', 'name', 'date', 'hour'])
         self.qb.set_dynamic_fields(['name', 'date', 'hour'])
-        self.qb.set_delimeter(':')
+        self.qb.set_delimiter(':')
         self.qb.where('name', 'alice')
         self.qb.where_in('date', ['09-01', '09-02'])
         self.qb.where_in('hour', ['10', '11'])
