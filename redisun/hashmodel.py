@@ -39,7 +39,7 @@ class HashModel(Model):
             return [k] + (kvs[k] if isinstance(kvs[k], list) else [kvs[k]])
         return None
     
-    def all(self, fields, with_ttl: bool=False):
+    def all(self, fields=(), with_ttl: bool=False):
         """ Get hashes
         Parameters:
         - fields <list> the fields you want
@@ -49,14 +49,14 @@ class HashModel(Model):
         return self._invoke_lua_script(lua, self.keys(),
                                        [1 if len(fields) > 0 else 0, 1 if with_ttl else 0, self._ttl_in], fields)
     
-    def getset_one(self, value: dict, fields, ttl: int=0):
+    def getset_one(self, value: dict, fields=(), ttl: int=0):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = load_lua_script('hash_getset_one', (joined_fields, hmset_args))
         kv = self._invoke_lua_script(lua, [self.first_key()], [1 if len(fields) > 0 else 0, ttl, self._ttl_in], fields)
         return kv.get(self.first_key())
     
-    def getset_all(self, value: dict, fields, ttl: int=0):
+    def getset_all(self, value: dict, fields=(), ttl: int=0):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = load_lua_script('hash_getset_all', (joined_fields, hmset_args))
