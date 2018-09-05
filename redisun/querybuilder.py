@@ -1,11 +1,12 @@
 from itertools import product
 from random import randint
 
+
 class QueryBuilder(object):
     """ Build query keys
     The key should be of style like 'greeting:alice:09-01'.
     which has three fields at all and two dynamic fields.
-    The fields are joined by a delimeter like ':'.
+    The fields are joined by a delimiter like ':'.
 
     All fields: greeting, <name>, <date>
     Dynamic fields: <name>, <date>
@@ -30,33 +31,35 @@ class QueryBuilder(object):
     - 2.7.5
 
     """
-    def __init__(self, all_fields=(), dynamic_fields=(), delimeter='', bindings={}):
+    
+    def __init__(self, all_fields=(), dynamic_fields=(), delimiter='', bindings=None):
         self._all_fields = all_fields
         self._dynamic_fields = dynamic_fields
-        self._delimeter = delimeter
-        self._bindings = bindings
-
+        self._delimiter = delimiter
+        self._bindings = dict(bindings)
+        self._cached_keys = None
+    
     def set_all_fields(self, fields):
         self._all_fields = fields
         return self
-
+    
     def set_dynamic_fields(self, fields):
         self._dynamic_fields = fields
         return self
-
-    def set_delimeter(self, delim):
-        self._delimeter = delim
+    
+    def set_delimiter(self, delim):
+        self._delimiter = delim
         return self
-
+    
     def get_all_fields(self):
         return self._all_fields
-
+    
     def get_dynamic_fields(self):
         return self._dynamic_fields
-
-    def get_delimeter(self):
-        return self._delimeter
-
+    
+    def get_delimiter(self):
+        return self._delimiter
+    
     def where(self, field, value):
         """ Bind value to a dynamic field.
         The value should be a string.
@@ -64,7 +67,7 @@ class QueryBuilder(object):
         self._bind_one(field, value)
         self._clean_cached_keys()
         return self
-
+    
     def where_in(self, field, values):
         """ Bind values to a dynamic field.
         The values should be a tuple/list which holds strings only.
@@ -72,40 +75,39 @@ class QueryBuilder(object):
         self._bind_multi(field, values)
         self._clean_cached_keys()
         return self
-
+    
     def get_bindings(self):
         return self._bindings
-
-    def get_field(self,key,field):
-        parts = key.split(self.get_delimeter())
+    
+    def get_field(self, key, field):
+        parts = key.split(self.get_delimiter())
         all_fields = self.get_all_fields()
-        field_index = all_fields.index(field)
         if field in all_fields:
             return parts[all_fields.index(field)]
         return None
-
+    
     def flush(self):
         """ Flush the bingdings.
         Do it before starting a new query.
         """
         self._bindings = {}
         self._cached_keys = None
-
+    
     def first_key(self):
         keys = self.keys()
         return keys[0] if len(keys) > 0 else None
-
+    
     def last_key(self):
         keys = self.keys()
         return keys[len(keys) - 1] if len(keys) > 0 else None
-
+    
     def random_key(self):
         keys = self.keys()
         return keys[randint(0, len(keys) - 1)] if len(keys) > 0 else None
-
+    
     def keys(self):
         return self._compose_keys()
-
+    
     def _compose_keys(self):
         """ compose query keys
         """
@@ -118,12 +120,12 @@ class QueryBuilder(object):
         for row in binding_rows:
             row.reverse()
             parts = []
-            for i,k in enumerate(all_fields):
+            for i, k in enumerate(all_fields):
                 parts += [k] if k not in dynamic_fields else [row.pop()]
-            keys += [self.get_delimeter().join(parts)]
+            keys += [self.get_delimiter().join(parts)]
         self._cache_keys(keys)
         return keys
-
+    
     def _combine_bindings(self):
         """ Explain bindings to rows
         e.g. {name:('alice','bob'), date:('09-01','09-02', '09-03')}
@@ -141,7 +143,7 @@ class QueryBuilder(object):
         binds = self.get_bindings()
         if not binds:
             return rows
-
+        
         # take example above, its field ranges would be 
         # [[0,1], [0,1,2]]
         field_ranges = []
@@ -159,22 +161,22 @@ class QueryBuilder(object):
         for field_indexes in field_index_combination:
             field_indexes = list(field_indexes)
             row = []
-            for index,field in enumerate(dynamic_fields):
+            for index, field in enumerate(dynamic_fields):
                 row += [binds.get(field)[field_indexes[index]]]
             rows += [row]
         return rows
-
+    
     def _cache_keys(self, keys):
         self._cached_keys = keys
-
+    
     def _clean_cached_keys(self):
         self._cached_keys = None
-
+    
     def _bind_one(self, field, value):
         if not isinstance(value, str):
             raise TypeError('The value to bind should be str type, %s given' % type(value))
         self._bindings[field] = (value,)
-
+    
     def _bind_multi(self, field, values):
         if not isinstance(values, list):
             raise TypeError('The values to bind should be list type, %s given' % type(values))
