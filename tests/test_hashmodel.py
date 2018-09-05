@@ -101,13 +101,14 @@ class TestHashModel(unittest.TestCase):
     def test_getset_one(self):
         self.model.remove()
         value = {'age': '27', 'address': 'caa'}
-        (key, ov) = self.model.getset_one(value)
+        ov = self.model.getset_one(value)
         first_key = self.model.first_key()
         self.assertTrue(bool(ov) is False)
         value1 = {'age': '28', 'address': 'caa'}
-        (key, ov) = self.model.getset_one(value1, [], 300)
+        ov = self.model.getset_one(value1, [], 300)
         self.assertEquals(ov, value)
         self.assertEquals(self.model.first([], True), [first_key, value1, 300])
+        self.assertEquals(self.model.first(['age']), [first_key, {'age': '28'}])
     
     def test_getset_all(self):
         self.model.remove()

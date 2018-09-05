@@ -53,10 +53,8 @@ class HashModel(Model):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = load_lua_script('hash_getset_one', (joined_fields, hmset_args))
-        kv = self._invoke_lua_script(lua, self.keys(), [1 if len(fields) > 0 else 0, ttl, self._ttl_in], fields)
-        for k in kv:
-            return [k, kv[k]]
-        return None
+        kv = self._invoke_lua_script(lua, [self.first_key()], [1 if len(fields) > 0 else 0, ttl, self._ttl_in], fields)
+        return kv.get(self.first_key())
     
     def getset_all(self, value, fields=(), ttl=0):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
