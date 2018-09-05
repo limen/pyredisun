@@ -1,9 +1,9 @@
 from redisun import querybuilder
-from redisun.model import Model
+from redisun.vectormodel import VectorModel
 from redisun.utils import *
 
 
-class HashModel(Model):
+class HashModel(VectorModel):
     
     def _init_query_builder(self):
         self._query_builder = querybuilder.QueryBuilder(['user', 'name', 'info'], ['name'], ':')

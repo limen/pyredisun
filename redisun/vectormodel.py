@@ -3,13 +3,13 @@ from redisun.model import Model
 
 class VectorModel(Model):
     
-    def create_xx(self, value, ttl=0):
+    def create_xx(self, value, ttl: int=0):
         pass
     
-    def create_nx(self, value, ttl=0):
+    def create_nx(self, value, ttl: int=0):
         pass
     
-    def update(self, value, ttl=0):
+    def update(self, value, ttl: int=0):
         return self.create_xx(value, ttl)
     
     def put(self, elements):
@@ -18,22 +18,22 @@ class VectorModel(Model):
     def pull(self, elements):
         pass
     
-    def first(self, with_ttl=False):
+    def first(self, with_ttl: bool=False):
         pass
     
-    def last(self, with_ttl=False):
+    def last(self, with_ttl: bool=False):
         pass
     
-    def all(self, with_ttl=False):
+    def all(self, with_ttl: bool=False):
         pass
     
-    def randone(self, with_ttl=False):
+    def randone(self, with_ttl: bool=False):
         pass
     
-    def getset_one(self, members, ttl=0):
+    def getset_one(self, members, ttl: int=0):
         pass
     
-    def getset_all(self, members, ttl=0):
+    def getset_all(self, members, ttl: int=0):
         pass
     
     def __contains__(self, item):
