@@ -22,6 +22,16 @@ class Model(object):
     def _init_ttl_in(self):
         self._ttl_in = TTL_IN_SECOND
     
+    def remove(self):
+        """ Delete multi keys
+        Return:
+        int The number of keys that been deleted successfully
+        """
+        keys = self.keys()
+        if len(keys) > 0:
+            return self._redis.delete(*keys)
+        return 0
+    
     def where(self, field, value):
         self._query_builder.where(field, value)
         return self

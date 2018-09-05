@@ -101,13 +101,13 @@ class TestHashModel(unittest.TestCase):
     def test_getset_one(self):
         self.model.remove()
         value = {'age': '27', 'address': 'caa'}
-        ov = self.model.getset_one(value)
+        (key, ov) = self.model.getset_one(value)
         first_key = self.model.first_key()
-        self.assertTrue(bool(ov[first_key]) is False)
+        self.assertTrue(bool(ov) is False)
         value1 = {'age': '28', 'address': 'caa'}
-        ov = self.model.getset_one(value1)
-        self.assertEquals(ov[first_key], value)
-        self.assertEquals(self.model.first(), [first_key, value1])
+        (key, ov) = self.model.getset_one(value1, [], 300)
+        self.assertEquals(ov, value)
+        self.assertEquals(self.model.first([], True), [first_key, value1, 300])
     
     def test_getset_all(self):
         self.model.remove()
@@ -124,6 +124,13 @@ class TestHashModel(unittest.TestCase):
             self.assertTrue(k in keys)
             self.assertEquals(ovs[k], value)
 
+    def test_ttl(self):
+        self.model.remove()
+        value = {'age': '19', 'address': 'ca'}
+        self.model.create(value, 100)
+        (key, val, ttl) = self.model.first([], True)
+        self.assertEquals(val, value)
+        self.assertEquals(ttl, 100)
 
 if __name__ == '__main__':
     unittest.main()

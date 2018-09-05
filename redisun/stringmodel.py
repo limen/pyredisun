@@ -22,16 +22,6 @@ class StringModel(Model):
         lua = load_lua_script('string_set')
         return self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
     
-    def remove(self):
-        """ Delete multi keys
-        Return:
-        int The number of keys that been deleted successfully
-        """
-        keys = self.keys()
-        if len(keys) > 0:
-            return self._redis.delete(*keys)
-        return 0
-    
     def create_xx(self, value, ttl=0):
         """ Set the key only if it already exists
         parameters

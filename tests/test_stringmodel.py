@@ -86,9 +86,11 @@ class TestStringModel(unittest.TestCase):
         self.model.remove()
         ov = self.model.getset_one('hiredis#6')
         self.assertTrue(ov is None)
-        ov = self.model.getset_one('hiredis#7')
+        ov = self.model.getset_one('hiredis#7', 300)
         self.assertEquals(ov, 'hiredis#6')
-        self.assertEquals(self.model.get(), 'hiredis#7')
+        (k, v, ttl) = self.model.first(True)
+        self.assertEquals(v, 'hiredis#7')
+        self.assertEquals(ttl, 300)
     
     def test_getset_all(self):
         self.model.remove()
@@ -98,7 +100,6 @@ class TestStringModel(unittest.TestCase):
         for i, k in enumerate(ovs):
             self.assertTrue(k in keys)
             self.assertTrue(ovs[k] is None)
-        return
         ovs = self.model.getset_all('hiredis#9')
         self.assertEquals(len(ovs), 6)
         for i, k in enumerate(ovs):
@@ -109,6 +110,13 @@ class TestStringModel(unittest.TestCase):
         for i, k in enumerate(ovs):
             self.assertTrue(k in keys)
             self.assertEquals(ovs[k], 'hiredis#9')
+
+    def test_ttl(self):
+        self.model.remove()
+        self.model.create('hiredis#10', 100)
+        (key, value, ttl) = self.model.first(True)
+        self.assertEquals(value, 'hiredis#10')
+        self.assertEquals(ttl, 100)
     
     def test_get_key_field(self):
         key = self.model.first_key()

@@ -36,7 +36,7 @@ class HashModel(Model):
         kvs = self._invoke_lua_script(lua, self.keys(),
                                       [1 if len(fields) > 0 else 0, 1 if with_ttl else 0, self._ttl_in], fields)
         for k in kvs:
-            return [k, kvs[k]]
+            return [k] + (kvs[k] if isinstance(kvs[k], list) else [kvs[k]])
         return None
     
     def all(self, fields=(), with_ttl=False):
@@ -53,7 +53,10 @@ class HashModel(Model):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = load_lua_script('hash_getset_one', (joined_fields, hmset_args))
-        return self._invoke_lua_script(lua, self.keys(), [1 if len(fields) > 0 else 0, ttl, self._ttl_in], fields)
+        kv = self._invoke_lua_script(lua, self.keys(), [1 if len(fields) > 0 else 0, ttl, self._ttl_in], fields)
+        for k in kv:
+            return [k, kv[k]]
+        return None
     
     def getset_all(self, value, fields=(), ttl=0):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)

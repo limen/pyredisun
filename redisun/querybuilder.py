@@ -36,7 +36,7 @@ class QueryBuilder(object):
         self._all_fields = all_fields
         self._dynamic_fields = dynamic_fields
         self._delimiter = delimiter
-        self._bindings = dict(bindings)
+        self._bindings = {} if bindings is None else bindings
         self._cached_keys = None
     
     def set_all_fields(self, fields):
