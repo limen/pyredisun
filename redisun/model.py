@@ -55,21 +55,13 @@ class Model(object):
     def _call(self, *argv):
         return getattr(self._redis, self._command)(self.first_key(), *argv)
     
-    def _invoke_lua_script(self, script, keys, args, *argv):
+    def _invoke_lua_script(self, script, keys, args):
         values = self._call_lua_func(script, keys, args)
-        return self._parse_lua_return(values, *argv)
+        return parse_lua_batch_return(values)
     
     def _call_lua_func(self, script, keys, args):
         func = self._redis.register_script(script)
         return func(keys=keys, args=args)
-    
-    def _parse_lua_return(self, items, *argv):
-        dic = {}
-        for v in items:
-            v = [x.decode('utf8') if isinstance(x, bytes) else x for x in v]
-            item = self._format_item(v[1], *argv)
-            dic[v[0]] = ([item, int(v[2])] if len(v) == 3 else item)
-        return dic
     
     def _format_item(self, item, *argv):
         return item

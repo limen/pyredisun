@@ -7,14 +7,14 @@ for i,k in ipairs(KEYS) do
     ov=redis.call('HGETALL',k)
   end
   local lt=tonumber(ARGV[2]) 
-  redis.call('HMSET',k,%s)
-  if lt>0 then
+  local ms=redis.call('HMSET',k,%s)
+  if lt>0 and ms=='OK' then
     if ARGV[3]=='EX' then
       redis.call('EXPIRE',k,lt)
     else 
       redis.call('PEXPIRE',k,lt)
     end
   end 
-  vs[#vs+1]={k,ov}
+  vs[#vs+1]={k,ov,ms}
 end
 return vs

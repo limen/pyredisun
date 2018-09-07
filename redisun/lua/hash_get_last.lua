@@ -14,13 +14,13 @@ if lk~=nil then
   end
   if ARGV[2]=='1' then
     if ARGV[3]=='EX' then
-      vr={{lk,v,redis.call('TTL',lk)}}
+      vr={lk,v,redis.call('TTL',lk)}
     else
-      vr={{lk,v,redis.call('PTTL',lk)}}
+      vr={lk,v,redis.call('PTTL',lk)}
     end
   else
-    vr={{lk,v}}
+    vr={lk,v}
   end
   return vr
 end
-return {}
+return nil

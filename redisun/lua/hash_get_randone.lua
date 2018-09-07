@@ -18,9 +18,9 @@ if #ks>0 then
     else
       ttl=redis.call('PTTL',k)
     end
-    return {{k,v,ttl}}
+    return {k,v,ttl}
   else
-    return {{k,v}}
+    return {k,v}
   end
 end
-return {}
+return nil

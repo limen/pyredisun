@@ -9,14 +9,14 @@ for i,k in ipairs(KEYS) do
     end
     if ARGV[2]=='1' then
       if ARGV[3]=='EX' then
-        vr={{k,v,redis.call('TTL',k)}}
+        vr={k,v,redis.call('TTL',k)}
       else
-        vr={{k,v,redis.call('PTTL',k)}}
+        vr={k,v,redis.call('PTTL',k)}
       end
     else
-      vr={{k,v}}
+      vr={k,v}
     end
     return vr
   end
 end
-return {}
+return nil

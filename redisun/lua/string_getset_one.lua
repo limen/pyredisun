@@ -1,11 +1,12 @@
 local ov = redis.call('GET',KEYS[1])
 local ttl = redis.call('TTL',KEYS[1])
 local lt = tonumber(ARGV[2]) 
+local st=nil
 if lt==0 and ttl>0 then
-    redis.call('SET',KEYS[1],ARGV[1],ARGV[3],ttl)
+    st=redis.call('SET',KEYS[1],ARGV[1],ARGV[3],ttl)
 elseif lt>0 then
-    redis.call('SET',KEYS[1],ARGV[1],ARGV[3],lt)
+    st=redis.call('SET',KEYS[1],ARGV[1],ARGV[3],lt)
 else
-    redis.call('SET',KEYS[1],ARGV[1])
+    st=redis.call('SET',KEYS[1],ARGV[1])
 end 
-return ov
+return {ov,st}
