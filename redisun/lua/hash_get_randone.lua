@@ -6,7 +6,7 @@ for i,v in ipairs(KEYS) do
 end
 if #ks>0 then
   local k=ks[math.random(#ks)]
-  local v=nil
+  local v
   if ARGV[1]=='1' then
     v=redis.call('HMGET',k%s)
   else

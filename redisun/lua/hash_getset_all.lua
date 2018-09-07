@@ -1,6 +1,6 @@
 local vs={}
 for i,k in ipairs(KEYS) do
-  local ov=nil
+  local ov
   if ARGV[1]=='1' then
     ov=redis.call('HMGET',k%s)
   else
@@ -11,7 +11,7 @@ for i,k in ipairs(KEYS) do
   if lt>0 and ms=='OK' then
     if ARGV[3]=='EX' then
       redis.call('EXPIRE',k,lt)
-    else 
+    else
       redis.call('PEXPIRE',k,lt)
     end
   end 

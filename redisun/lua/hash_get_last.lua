@@ -1,12 +1,12 @@
-local lk=nil
+local lk
 for i,k in ipairs(KEYS) do
   if redis.call('EXISTS',k)==1 then
     lk=k
   end
 end
 if lk~=nil then
-  local v=nil
-  local vr=nil
+  local v
+  local vr
   if ARGV[1]=='1' then
     v=redis.call('HMGET',k%s)
   else

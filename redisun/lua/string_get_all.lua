@@ -2,7 +2,7 @@ local vs = {}
 for i,k in ipairs(KEYS) do
   if redis.call('EXISTS',k)==1 then
     local v=redis.call('GET',k)
-    local ttl=nil
+    local ttl
     if ARGV[1]=='1' then
       if ARGV[2]=='EX' then
         ttl=redis.call('TTL',k)

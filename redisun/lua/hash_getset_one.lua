@@ -1,4 +1,4 @@
-local ov=nil
+local ov
 if ARGV[1]=='1' then
   ov=redis.call('HMGET',KEYS[1]%s)
 else

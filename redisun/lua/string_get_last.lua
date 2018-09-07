@@ -1,4 +1,4 @@
-local lk=nil
+local lk
 for i,k in ipairs(KEYS) do
   if redis.call('EXISTS',k)==1 then
     lk=k
