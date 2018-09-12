@@ -56,8 +56,7 @@ class Model(object):
         return getattr(self._redis, self._command)(self.first_key(), *argv)
     
     def _invoke_lua_script(self, script, keys, args):
-        values = self._call_lua_func(script, keys, args)
-        return parse_lua_batch_return(values)
+        return self._call_lua_func(script, keys, args)
     
     def _call_lua_func(self, script, keys, args):
         func = self._redis.register_script(script)

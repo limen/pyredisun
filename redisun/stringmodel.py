@@ -59,7 +59,7 @@ class StringModel(Model):
         """
         lua = load_lua_script('string_getset_one')
         kvs = self._call_lua_func(lua, [self.first_key()], [value, self._ttl_in, ttl])
-        return parse_single_getset_return(kvs)
+        return parse_string_getset_return(kvs)
     
     def getset_all(self, value: str, ttl: int=0):
         """ Get multi keys and set new value
@@ -71,7 +71,7 @@ class StringModel(Model):
         """
         lua = load_lua_script('string_getset_all')
         kvs = self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
-        return parse_batch_getset_return(kvs)
+        return parse_string_batch_getset_return(kvs)
     
     def first(self, with_ttl: bool=False):
         """ Get first existed key

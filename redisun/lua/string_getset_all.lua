@@ -26,6 +26,6 @@ for i, k in ipairs(KEYS) do
     if ms ~= 'OK' then
         st = 2
     end
-    rs[i] = { k, st, ov, ms }
+    rs[i] = { k, st, ov, ttl, ms}
 end
 return rs
