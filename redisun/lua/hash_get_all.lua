@@ -1,8 +1,8 @@
 local vs = {}
 for i, k in ipairs(KEYS) do
+    local v
+    local ttl
     if redis.call('EXISTS', k) == 1 then
-        local v
-        local ttl
         local tp = redis.call('TYPE', k)['ok']
         if tp == 'hash' then
             if ARGV[1] == '1' then
@@ -19,10 +19,12 @@ for i, k in ipairs(KEYS) do
             end
         end
         if tp == 'hash' or tp == 'none' then
-            vs[#vs + 1] = { k, 0, v, ttl }
+            vs[i] = { k, 0, v, ttl }
         else
-            vs[#vs + 1] = { k, 1, v, ttl }
+            vs[i] = { k, 1, v, ttl }
         end
+    else
+        vs[i] = { k, 3, v, ttl }
     end
 end
 return vs
