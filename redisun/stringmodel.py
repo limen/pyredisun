@@ -30,8 +30,8 @@ class StringModel(Model):
         Return
         dict {k1:<set rs>,k2:<set rs>,...}
         """
-        lua = load_lua_script('string_setx')
-        return self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl, 'XX'])
+        lua = load_lua_script('string_setxx')
+        return self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
     
     def create_nx(self, value: str, ttl: int=0):
         """ Set the key only if it does not already exist
@@ -40,8 +40,8 @@ class StringModel(Model):
         Return
         dict {k1:<set rs>,k2:<set rs>,...}
         """
-        lua = load_lua_script('string_setx')
-        return self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl, 'NX'])
+        lua = load_lua_script('string_setnx')
+        return self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
     
     def update(self, value: str, ttl: int=0):
         """ Update the key
@@ -58,7 +58,7 @@ class StringModel(Model):
         str|None
         """
         lua = load_lua_script('string_getset_one')
-        kvs = self._call_lua_func(lua, [self.first_key()], [value, ttl, self._ttl_in])
+        kvs = self._call_lua_func(lua, [self.first_key()], [value, self._ttl_in, ttl])
         return parse_single_getset_return(kvs)
     
     def getset_all(self, value: str, ttl: int=0):
@@ -70,7 +70,7 @@ class StringModel(Model):
         dict {k1:v1,k2:v2,...}
         """
         lua = load_lua_script('string_getset_all')
-        kvs = self._invoke_lua_script(lua, self.keys(), [value, ttl, self._ttl_in])
+        kvs = self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
         return parse_batch_getset_return(kvs)
     
     def first(self, with_ttl: bool=False):

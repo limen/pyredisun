@@ -1,26 +1,28 @@
-local ks={}
-for i,v in ipairs(KEYS) do
-  if redis.call('EXISTS',v)==1 then
-    ks[#ks+1]=v
-  end
-end
-if #ks>0 then
-  local k=ks[math.random(#ks)]
-  local v
-  if ARGV[1]=='1' then
-    v=redis.call('HMGET',k%s)
-  else
-    v=redis.call('HGETALL',k)
-  end
-  if ARGV[2]=='1' then
-    if ARGV[3]=='EX' then
-      ttl=redis.call('TTL',k)
-    else
-      ttl=redis.call('PTTL',k)
+local ks = {}
+local fk
+for i, v in ipairs(KEYS) do
+    if redis.call('EXISTS', v) == 1 then
+        ks[#ks + 1] = v
     end
-    return {k,v,ttl}
-  else
-    return {k,v}
-  end
+end
+if #ks > 0 then
+    fk = ks[math.random(#ks)]
+end
+if fk ~= nil then
+    local v
+    local ttl
+    if ARGV[1] == '1' then
+        v = redis.call('HMGET', fk%s)
+    else
+        v = redis.call('HGETALL', fk)
+    end
+    if ARGV[2] == '1' then
+        if ARGV[3] == 'EX' then
+            ttl = redis.call('TTL', fk)
+        else
+            ttl = redis.call('PTTL', fk)
+        end
+    end
+    return { fk, v, ttl }
 end
 return nil

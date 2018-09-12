@@ -1,15 +1,21 @@
-local vs={}
-local lt = tonumber(ARGV[1])
-local ex = ARGV[2]
-for i,k in ipairs(KEYS) do
-  local ms=redis.call('HMSET',k,%s)
-  vs[i] = {k,ms}
-  if lt>0 and ms=='OK' then
-    if ex=='EX' then
-      redis.call('EXPIRE',k,lt)
+local vs = {}
+local lt = tonumber(ARGV[2])
+for i, k in ipairs(KEYS) do
+    local tp = redis.call('TYPE', k)['ok']
+    if tp == 'hash' or tp == 'none' then
+        local ms=redis.call('HMSET',k,%s)['ok']
+        if lt > 0 and ms == 'OK' then
+            vs[i] = { k, 0, ms }
+            if ARGV[1] == 'EX' then
+                redis.call('EXPIRE', k, lt)
+            else
+                redis.call('PEXPIRE', k, lt)
+            end
+        else
+            vs[i] = { k, 2, ms }
+        end
     else
-      redis.call('PEXPIRE',k,lt)
+        vs[i] = { k, 1, nil }
     end
-  end 
 end
 return vs

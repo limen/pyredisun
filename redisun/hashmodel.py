@@ -58,7 +58,7 @@ class HashModel(VectorModel):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = load_lua_script('hash_getset_one', (joined_fields, hmset_args))
-        kvs = self._call_lua_func(lua, [self.first_key()], [1 if len(fields) > 0 else 0, ttl, self._ttl_in])
+        kvs = self._call_lua_func(lua, [self.first_key()], [1 if len(fields) > 0 else 0, self._ttl_in, ttl])
         kvs = parse_single_getset_return(kvs)
         if kvs[2]:
             kvs[1] = parse_hash_get(kvs[1], fields)
@@ -68,12 +68,12 @@ class HashModel(VectorModel):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = load_lua_script('hash_getset_all', (joined_fields, hmset_args))
-        kvs = self._invoke_lua_script(lua, self.keys(), [1 if len(fields) > 0 else 0, ttl, self._ttl_in])
+        kvs = self._invoke_lua_script(lua, self.keys(), [1 if len(fields) > 0 else 0, self._ttl_in, ttl])
         return parse_batch_getset_return(kvs)
         
     def _call_create(self, script_name: str, value: dict, ttl: int):
         argv = []
-        argv += [ttl, self._ttl_in]
+        argv += [self._ttl_in, ttl]
         arg_order = 2
         argv_str = ''
         for i, k in enumerate(value):

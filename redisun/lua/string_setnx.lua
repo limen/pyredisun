@@ -1,20 +1,17 @@
-local rs = {}
+local vs = {}
+local lt = tonumber(ARGV[3])
 for i, k in ipairs(KEYS) do
     local tp = redis.call('TYPE', k)['ok']
-    local ov
-    local st
+    local st = 1
     local ms
-    if tp == 'string' then
-        ov = redis.call('GET', k)
-    end
-    if tp == 'string' or tp == 'none' then
+    local ttl
+    if tp == 'none' then
         st = 0
-    else
-        st = 1
-    end
-    local ttl = redis.call('TTL', k)
-    local lt = tonumber(ARGV[3])
-    if st == 0 then
+        if ARGV[3] == 'EX' then
+            ttl = redis.call('TTL', k)
+        else
+            ttl = redis.call('PTTL', k)
+        end
         if lt == 0 and ttl > 0 then
             ms = redis.call('SET', k, ARGV[1], ARGV[2], ttl)['ok']
         elseif lt > 0 then
@@ -22,10 +19,12 @@ for i, k in ipairs(KEYS) do
         else
             ms = redis.call('SET', k, ARGV[1])['ok']
         end
+        if ms ~= 'OK' then
+            st = 2
+        end
+    elseif tp == 'string' then
+        st = 3
     end
-    if ms ~= 'OK' then
-        st = 2
-    end
-    rs[i] = { k, st, ov, ms }
+    vs[i] = { k, st, ms }
 end
-return rs
+return vs
