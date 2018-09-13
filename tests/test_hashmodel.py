@@ -109,7 +109,7 @@ class TestHashModel(unittest.TestCase):
         ok_keys, _, failed_keys_status, _ = self.model.create_nx(value)
         self.assertEqual(len(ok_keys), 0)
         for k in self.model.keys():
-            self.assertNotEquals(failed_keys_status[k], STATUS_EXISTENCE_NOT_SATISFIED)
+            self.assertEqual(failed_keys_status[k], STATUS_EXISTENCE_NOT_SATISFIED)
     
     def test_getset_one(self):
         self.model.remove()

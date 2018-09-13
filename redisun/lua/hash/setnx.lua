@@ -3,9 +3,10 @@ local lt=tonumber(ARGV[2])
 local ex=ARGV[1]
 for i,k in ipairs(KEYS) do
   local st=false
+  local ms=false
   local tp=redis.call('TYPE',k)['ok']
   if tp=='none' then
-    local ms=redis.call('HMSET',k,_SET_KVS_)['ok']
+    ms=redis.call('HMSET',k,_SET_KVS_)['ok']
     if ms=='OK' then
       st=0
       if lt>0 then
@@ -21,5 +22,6 @@ for i,k in ipairs(KEYS) do
   else
     st=3
   end
+  vs[i]={k,st,ms}
 end
 return vs
