@@ -1,21 +1,26 @@
 local vs={}
 local lt=tonumber(ARGV[2])
 for i,k in ipairs(KEYS) do
+  local st=false
+  local ms=false
   local tp=redis.call('TYPE',k)['ok']
-  if tp == 'hash' or tp == 'none' then
-    local ms=redis.call('HMSET',k,_SET_KVS_)['ok']
-    if lt > 0 and ms == 'OK' then
-      vs[i]={ k,0,ms }
-      if ARGV[1] == 'EX' then
-        redis.call('EXPIRE',k,lt)
-      else
-        redis.call('PEXPIRE',k,lt)
+  if tp=='hash' or tp=='none' then
+    ms=redis.call('HMSET',k,_SET_KVS_)['ok']
+    if ms=='OK' then
+      st=0
+      if lt>0 then
+        if ARGV[1]=='EX' then
+          redis.call('EXPIRE',k,lt)
+        else
+          redis.call('PEXPIRE',k,lt)
+        end
       end
     else
-      vs[i]={ k,2,ms }
+      st=2
     end
   else
-    vs[i]={ k,1,false }
+    st=1
   end
+  vs[i]={ k,st,ms }
 end
 return vs
