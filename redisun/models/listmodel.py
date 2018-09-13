@@ -1,4 +1,4 @@
-from redisun.vectormodel import VectorModel
+from redisun.models.vectormodel import VectorModel
 from redisun.querybuilder import QueryBuilder
 
 

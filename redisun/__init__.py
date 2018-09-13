@@ -1,4 +1,3 @@
-from redisun import hashmodel
+from redisun.models import hashmodel
 from redisun import querybuilder
-from redisun import stringmodel
 from redisun import utils

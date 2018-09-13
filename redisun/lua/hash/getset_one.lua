@@ -2,12 +2,14 @@ local ov
 local st
 local ms
 local tp = redis.call('TYPE', KEYS[1])['ok']
-if tp == 'hash' or tp == 'none' then
+if tp == 'hash' then
     if ARGV[1] == '1' then
         ov = redis.call('HMGET', KEYS[1]%s)
     else
         ov = redis.call('HGETALL', KEYS[1])
     end
+end
+if tp == 'hash' or tp == 'none' then
     local lt = tonumber(ARGV[3])
     ms = redis.call('HMSET', KEYS[1],%s)['ok']
     if lt>0 and ms=='OK' then

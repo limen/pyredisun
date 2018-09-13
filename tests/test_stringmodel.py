@@ -1,6 +1,6 @@
 import unittest
 
-from redisun.stringmodel import StringModel
+from redisun.models.stringmodel import StringModel
 
 
 class TestStringModel(unittest.TestCase):

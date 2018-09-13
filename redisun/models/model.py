@@ -62,8 +62,29 @@ class Model(object):
         func = self._redis.register_script(script)
         return func(keys=keys, args=args)
     
-    def _format_item(self, item, *argv):
-        return item
+    def _format_value(self, *args):
+        pass
+    
+    def _parse_set_response(self, *args):
+        pass
+    
+    def _parse_set_multi_response(self, *args):
+        pass
+    
+    def _parse_get_response(self, *args):
+        pass
+    
+    def _parse_get_multi_response(self, *args):
+        pass
+    
+    def _parse_getset_response(self, *args):
+        pass
+    
+    def _parse_getset_multi_response(self, *args):
+        pass
+    
+    def _load_script(self, command, *args):
+        pass
     
     def __getattr__(self, name):
         self._command = name

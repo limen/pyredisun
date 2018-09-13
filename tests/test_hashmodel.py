@@ -1,6 +1,6 @@
 import unittest
 
-from redisun.hashmodel import HashModel
+from redisun.models.hashmodel import HashModel
 
 
 class TestHashModel(unittest.TestCase):

@@ -1,4 +1,4 @@
-from redisun.model import Model
+from redisun.models.model import Model
 
 
 class VectorModel(Model):
