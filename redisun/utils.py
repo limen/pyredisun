@@ -11,9 +11,13 @@ STATUS_EXISTENCE_NOT_SATISFIED = 3
 _lua_path = os.path.dirname(__file__) + '/lua'
 
 
-def load_lua_script(key_type, command, replacements=()):
+def load_lua_script(key_type, command, replacements=None):
     with open('%s/%s/%s.lua' % (_lua_path, key_type, command)) as f:
-        return f.read() % replacements if len(replacements) > 0 else f.read()
+        lua = f.read()
+    if replacements is not None:
+        for k in replacements:
+            lua.replace(k, replacements[k])
+    return lua
     
     
 def wrap_with_single_quote(fields):

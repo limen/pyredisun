@@ -3,6 +3,9 @@ from redisun.models.vectormodel import VectorModel
 from redisun.indexawarelist import IndexAwareList
 from redisun.utils import *
 
+_SCRIPT_GET_FIELDS = '_GET_FIELDS_'
+_SCRIPT_SET_KVS = '_SET_KVS_'
+
 
 class HashModel(VectorModel):
     
@@ -32,8 +35,8 @@ class HashModel(VectorModel):
         return self._one('get_randone', fields, with_ttl)
     
     def _one(self, script_name: str, fields, with_ttl: bool):
-        joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
-        lua = self._load_script(script_name, (joined_fields,))
+        joined_fields = ','.join(wrap_with_single_quote(fields))
+        lua = self._load_script(script_name, {_SCRIPT_GET_FIELDS: joined_fields})
         resp = self._call_lua_func(lua, self.keys(),
                                    [1 if len(fields) > 0 else 0, 1 if with_ttl else 0, self._ttl_in])
         return self._parse_get_response(resp, with_ttl, fields)
@@ -43,8 +46,8 @@ class HashModel(VectorModel):
         Parameters:
         - fields <list> the fields you want
         """
-        joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
-        lua = self._load_script('get_all', (joined_fields,))
+        joined_fields = ','.join(wrap_with_single_quote(fields))
+        lua = self._load_script('get_all', {_SCRIPT_GET_FIELDS: joined_fields})
         resp = self._invoke_lua_script(lua, self.keys(),
                                        [1 if len(fields) > 0 else 0, 1 if with_ttl else 0, self._ttl_in])
         return self._parse_get_multi_response(resp, with_ttl, fields)
@@ -59,7 +62,8 @@ class HashModel(VectorModel):
     def getset_all(self, value: dict, fields=(), ttl: int=0):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
-        lua = self._load_script('getset_all', (joined_fields, hmset_args))
+        lua = self._load_script('getset_all',
+                                {_SCRIPT_GET_FIELDS: joined_fields, _SCRIPT_SET_KVS: hmset_args})
         resp = self._invoke_lua_script(lua, self.keys(), [1 if len(fields) > 0 else 0, self._ttl_in, ttl])
         return self._parse_getset_multi_response(resp, fields)
         
@@ -73,7 +77,7 @@ class HashModel(VectorModel):
             argv_str += 'ARGV[%s],ARGV[%s],' % (arg_order + 1, arg_order + 2)
             arg_order += 2
         argv_str = argv_str.rstrip(',')
-        lua = self._load_script(script_name, (argv_str,))
+        lua = self._load_script(script_name, {_SCRIPT_SET_KVS: argv_str})
         kvs = self._invoke_lua_script(lua, self.keys(), argv)
         return self._parse_set_multi_response(kvs)
     
@@ -172,5 +176,5 @@ class HashModel(VectorModel):
                 i += 2
         return dic
     
-    def _load_script(self, command, replacements=()):
+    def _load_script(self, command, replacements=None):
         return load_lua_script('hash', command, replacements)

@@ -182,5 +182,5 @@ class StringModel(Model):
     def _format_value(self, value):
         return value
     
-    def _load_script(self, command, replacements=()):
+    def _load_script(self, command, replacements=None):
         return load_lua_script('string', command, replacements)
