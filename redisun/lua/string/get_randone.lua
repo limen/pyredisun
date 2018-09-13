@@ -1,7 +1,7 @@
 local ks = {}
 local fk
 for i, v in ipairs(KEYS) do
-    if redis.call('EXISTS', v) == 1 and redis.call('TYPE', k)['ok'] == 'string' then
+    if redis.call('EXISTS', v) == 1 and redis.call('TYPE', v)['ok'] == 'string' then
         ks[#ks + 1] = v
     end
 end
