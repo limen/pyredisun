@@ -7,6 +7,6 @@ class IndexAwareList(object):
         self._list = lt
         
     def __getitem__(self, item):
-        if len(self._list) > item + 1:
+        if len(self._list) > item:
             return self._list[item]
         return None
