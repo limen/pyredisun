@@ -1,9 +1,9 @@
 local rs={}
 for i,k in ipairs(KEYS) do
   local tp=redis.call('TYPE',k)['ok']
-  local ov
-  local st
-  local ms
+  local ov=false
+  local st=false
+  local ms=false
   if tp == 'string' then
     ov=redis.call('GET',k)
   end

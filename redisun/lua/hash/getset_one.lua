@@ -1,6 +1,6 @@
-local ov
-local st
-local ms
+local ov=false
+local st=false
+local ms=false
 local tp=redis.call('TYPE',KEYS[1])['ok']
 if tp == 'hash' then
   if ARGV[1] == '1' then

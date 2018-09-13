@@ -1,7 +1,7 @@
 local vs={}
 for i,k in ipairs(KEYS) do
-  local v
-  local ttl
+  local v=false
+  local ttl=false
   if redis.call('EXISTS',k) == 1 then
     local tp=redis.call('TYPE',k)['ok']
     if tp == 'hash' then

@@ -1,13 +1,13 @@
 local tp=redis.call('TYPE',KEYS[1])['ok']
 local st=1
-local ov
-local ms
+local ov=false
+local ms=false
 if tp == 'string' or tp == 'none' then
   st=0
 end
 if st == 0 then
   ov=redis.call('GET',KEYS[1])
-  local ttl
+  local ttl=false
   if ARGV[3] == 'EX' then
     ttl=redis.call('TTL',KEYS[1])
   else

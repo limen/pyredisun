@@ -3,8 +3,8 @@ local lt=tonumber(ARGV[3])
 for i,k in ipairs(KEYS) do
   local tp=redis.call('TYPE',k)['ok']
   local st=1
-  local ms
-  local ttl
+  local ms=false
+  local ttl=false
   if tp == 'none' then
     st=0
     if ARGV[3] == 'EX' then

@@ -1,9 +1,9 @@
 local vs={}
 for i,k in ipairs(KEYS) do
-  local ov
-  local st
-  local ms
-  local ttl
+  local ov=false
+  local st=false
+  local ms=false
+  local ttl=false
   local tp=redis.call('TYPE',k)['ok']
   if tp == 'hash' then
     st=0

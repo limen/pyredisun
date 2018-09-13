@@ -1,5 +1,5 @@
 local ks={}
-local fk
+local fk=false
 for i,v in ipairs(KEYS) do
   if redis.call('EXISTS',v) == 1 then
     ks[#ks + 1]=v
@@ -8,9 +8,9 @@ end
 if #ks > 0 then
   fk=ks[math.random(#ks)]
 end
-if fk ~= nil then
-  local v
-  local ttl
+if fk ~= false then
+  local v=false
+  local ttl=false
   if ARGV[1] == '1' then
     v=redis.call('HMGET',fk,_GET_FIELDS_)
   else

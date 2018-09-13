@@ -10,7 +10,7 @@ if #ks > 0 then
 end
 if fk ~= nil then
   local v=redis.call('GET',fk)
-  local ttl
+  local ttl=false
   if ARGV[1] == '1' then
     if ARGV[2] == 'EX' then
       ttl=redis.call('TTL',fk)
