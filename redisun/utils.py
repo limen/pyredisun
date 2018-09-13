@@ -1,4 +1,4 @@
-import os
+from os.path import dirname
 
 TTL_IN_SECOND = 'EX'
 TTL_IN_MILLISECOND = 'PX'
@@ -8,7 +8,7 @@ STATUS_WRONG_COMMAND = 1
 STATUS_SERVER_ERROR = 2
 STATUS_EXISTENCE_NOT_SATISFIED = 3
 
-_lua_path = os.path.dirname(__file__) + '/lua'
+_lua_path = dirname(__file__) + '/lua'
 
 
 def load_lua_script(key_type, command, replacements=None):

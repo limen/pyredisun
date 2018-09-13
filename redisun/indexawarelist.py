@@ -1,12 +1,10 @@
 
-class IndexAwareList(object):
+class IndexAwareList(list):
     """
     List has awareness of its index bound
     """
-    def __init__(self, lt: list):
-        self._list = lt
-        
+    
     def __getitem__(self, item):
-        if len(self._list) > item:
-            return self._list[item]
+        if len(self) > item:
+            return super(IndexAwareList, self).__getitem__(item)
         return None

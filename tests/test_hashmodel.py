@@ -133,5 +133,6 @@ class TestHashModel(unittest.TestCase):
         self.assertEquals(val, value)
         self.assertEquals(ttl, 100)
 
+
 if __name__ == '__main__':
     unittest.main()
