@@ -82,16 +82,25 @@ class TestStringModel(unittest.TestCase):
             self.assertTrue(ok_keys_value[k], ['hiredis#4', 100])
     
     def test_create_xx(self):
+        self.model.create('hiredis#5')
         ok_keys, ok_keys_value, _, _ = self.model.create_xx('hiredis#5')
         for k in self.model.keys():
             self.assertEquals(ok_keys_value[k], 'OK')
+        ok_keys, ok_keys_value, failed_keys_status, _ = self.model.create_xx('hiredis#5')
+        self.assertEqual(len(ok_keys), 0)
+        self.assertEqual(len(failed_keys_status), len(self.model.keys()))
+        for k in self.model.keys():
+            self.assertEquals(failed_keys_status[k], STATUS_EXISTENCE_NOT_SATISFIED)
     
     def test_create_nx(self):
-        rs = self.model.create_nx('hiredis#5')
+        self.model.remove()
+        ok_keys, ok_keys_value, _, _ = self.model.create_nx('hiredis#6')
         for k in self.model.keys():
-            self.assertEquals(rs[k], None)
-        ok_keys, ok_keys_value, failed_keys_status, failed_keys_hint = self.model.create_nx('hiredis#5')
+            self.assertEquals(ok_keys_value[k], 'OK')
+        self.model.create('hiredis#6')
+        ok_keys, ok_keys_value, failed_keys_status, _ = self.model.create_nx('hiredis#6')
         self.assertEqual(len(ok_keys), 0)
+        self.assertEqual(len(failed_keys_status), len(self.model.keys()))
         for k in self.model.keys():
             self.assertEquals(failed_keys_status[k], STATUS_EXISTENCE_NOT_SATISFIED)
     

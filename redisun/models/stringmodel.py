@@ -125,7 +125,7 @@ class StringModel(Model):
         :return: key, status, value, ttl
         """
         ok_keys = []
-        failed_keys_status = []
+        failed_keys_status = {}
         ok_keys_value = {}
         failed_keys_hint = {}
         for item_bag in resp:
@@ -144,7 +144,7 @@ class StringModel(Model):
     
     def _parse_set_multi_response(self, resp):
         ok_keys = []
-        failed_keys_status = []
+        failed_keys_status = {}
         ok_keys_value = {}
         failed_keys_hint = {}
         for item_bag in resp:
