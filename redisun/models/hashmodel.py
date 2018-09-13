@@ -55,7 +55,7 @@ class HashModel(VectorModel):
     def getset_one(self, value: dict, fields=(), ttl: int=0):
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
-        lua = self.load_script('getset_one', (joined_fields, hmset_args))
+        lua = self._load_script('getset_one', (joined_fields, hmset_args))
         resp = self._call_lua_func(lua, [self.first_key()], [1 if len(fields) > 0 else 0, self._ttl_in, ttl])
         return self._parse_getset_response(resp, fields)
     
@@ -108,7 +108,7 @@ class HashModel(VectorModel):
 
     def _parse_get_multi_response(self, resp, with_ttl, fields):
         ok_keys = []
-        failed_keys_status = []
+        failed_keys_status = {}
         ok_keys_value = {}
         failed_keys_hint = {}
         for item_bag in resp:
@@ -125,7 +125,7 @@ class HashModel(VectorModel):
     
     def _parse_set_multi_response(self, resp):
         ok_keys = []
-        failed_keys_status = []
+        failed_keys_status = {}
         ok_keys_value = {}
         failed_keys_hint = {}
         for item_bag in resp:

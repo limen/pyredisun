@@ -15,7 +15,7 @@ for i,k in ipairs(KEYS) do
       vs[i]={ k,2,ms }
     end
   else
-    vs[i]={ k,1,nil }
+    vs[i]={ k,1,false }
   end
 end
 return vs
