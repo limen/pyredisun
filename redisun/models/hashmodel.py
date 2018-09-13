@@ -177,4 +177,7 @@ class HashModel(VectorModel):
         return dic
     
     def _load_script(self, command, replacements=None):
+        # To avoid lua script compiling error
+        if _SCRIPT_GET_FIELDS in replacements and replacements[_SCRIPT_GET_FIELDS] == '':
+            replacements[_SCRIPT_GET_FIELDS] = '0'
         return load_lua_script('hash', command, replacements)

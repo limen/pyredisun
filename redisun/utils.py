@@ -16,7 +16,7 @@ def load_lua_script(key_type, command, replacements=None):
         lua = f.read()
     if replacements is not None:
         for k in replacements:
-            lua.replace(k, replacements[k])
+            lua = lua.replace(k, replacements[k])
     return lua
     
     

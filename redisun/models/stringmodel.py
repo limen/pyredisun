@@ -80,7 +80,8 @@ class StringModel(Model):
         None|list [key,value,ttl(if wanted)]
         """
         lua = self._load_script('get_first')
-        return self._call_lua_func(lua, self.keys(), [1 if with_ttl else 0, self._ttl_in])
+        resp = self._call_lua_func(lua, self.keys(), [1 if with_ttl else 0, self._ttl_in])
+        return self._parse_get_response(resp, with_ttl)
     
     def last(self, with_ttl: bool=False):
         """ Get last existed key
@@ -89,7 +90,7 @@ class StringModel(Model):
         """
         lua = self._load_script('get_last')
         resp = self._call_lua_func(lua, self.keys(), [1 if with_ttl else 0, self._ttl_in])
-        return self._parse_get_response(resp)
+        return self._parse_get_response(resp, with_ttl)
     
     def randone(self, with_ttl: bool=False):
         """ Pick one randomly from existed keys
@@ -98,7 +99,7 @@ class StringModel(Model):
         """
         lua = self._load_script('get_randone')
         resp = self._call_lua_func(lua, self.keys(), [1 if with_ttl else 0, self._ttl_in])
-        return self._parse_get_response(resp)
+        return self._parse_get_response(resp, with_ttl)
     
     def all(self, with_ttl: bool=False):
         """ Get all existed keys
@@ -108,14 +109,14 @@ class StringModel(Model):
         """
         lua = self._load_script('get_all')
         resp = self._invoke_lua_script(lua, self.keys(), [1 if with_ttl else 0, self._ttl_in])
-        return self._parse_get_multi_response(resp)
+        return self._parse_get_multi_response(resp, with_ttl)
     
     def _parse_get_response(self, resp, with_ttl):
         if resp is None:
             return None
         resp = IndexAwareList(resp)
-        return [resp[0], self._format_value(resp[1]), resp[2]] \
-            if with_ttl else [resp[0], self._format_value(resp[1])]
+        return [resp[0], self._format_value(resp[1]), resp[2]] if with_ttl \
+            else [resp[0], self._format_value(resp[1])]
     
     def _parse_get_multi_response(self, resp, with_ttl):
         """
