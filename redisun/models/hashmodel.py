@@ -13,17 +13,19 @@ class HashModel(VectorModel):
         self._query_builder = querybuilder.QueryBuilder(['user', 'name', 'info'], ['name'], ':')
     
     def create(self, value: dict, ttl: int=0):
-        """ Create an hash
-        Parameters:
-        - value <dict>
         """
-        return self._call_create('set', value, ttl)
+        Create hashes and modify their ttl(s) if wanted
+        :param value: dict
+        :param ttl: int|float
+        :return: ok keys : list, ok keys value : dict, failed keys status : dict, failed keys hint : dict
+        """
+        return self._call_create('set', to_string_dict(value), ttl)
     
     def create_xx(self, value: dict, ttl: int=0):
-        return self._call_create('setxx', value, ttl)
+        return self._call_create('setxx', to_string_dict(value), ttl)
     
     def create_nx(self, value: dict, ttl: int=0):
-        return self._call_create('setnx', value, ttl)
+        return self._call_create('setnx', to_string_dict(value), ttl)
     
     def first(self, fields=(), with_ttl: bool=False):
         return self._one('get_first', fields, with_ttl)
@@ -42,10 +44,6 @@ class HashModel(VectorModel):
         return self._parse_get_response(resp, with_ttl, fields)
     
     def all(self, fields=(), with_ttl: bool=False):
-        """ Get hashes
-        Parameters:
-        - fields <list> the fields you want
-        """
         joined_fields = ','.join(wrap_with_single_quote(fields))
         lua = self._load_script('get_all', {_SCRIPT_GET_FIELDS: joined_fields})
         resp = self._invoke_lua_script(lua, self.keys(),
@@ -53,6 +51,7 @@ class HashModel(VectorModel):
         return self._parse_get_multi_response(resp, with_ttl, fields)
     
     def getset_one(self, value: dict, fields=(), ttl: int=0):
+        value = to_string_dict(value)
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = self._load_script('getset_one', {_SCRIPT_GET_FIELDS: joined_fields, _SCRIPT_SET_KVS: hmset_args})
@@ -60,6 +59,7 @@ class HashModel(VectorModel):
         return self._parse_getset_response(resp, fields)
     
     def getset_all(self, value: dict, fields=(), ttl: int=0):
+        value = to_string_dict(value)
         joined_fields = ','.join([''] + wrap_with_single_quote(fields) if len(fields) > 0 else fields)
         hmset_args = ','.join(wrap_dict_to_list(value))
         lua = self._load_script('getset_all',

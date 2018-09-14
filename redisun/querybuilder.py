@@ -1,5 +1,6 @@
 from itertools import product
 from random import randint
+from redisun.utils import to_string, to_strings
 
 
 class QueryBuilder(object):
@@ -32,11 +33,11 @@ class QueryBuilder(object):
 
     """
     
-    def __init__(self, all_fields=(), dynamic_fields=(), delimiter='', bindings=None):
+    def __init__(self, all_fields=(), dynamic_fields=(), delimiter=''):
         self._all_fields = all_fields
         self._dynamic_fields = dynamic_fields
         self._delimiter = delimiter
-        self._bindings = {} if bindings is None else bindings
+        self._bindings = {}
         self._cached_keys = None
     
     def set_all_fields(self, fields):
@@ -47,8 +48,8 @@ class QueryBuilder(object):
         self._dynamic_fields = fields
         return self
     
-    def set_delimiter(self, delim):
-        self._delimiter = delim
+    def set_delimiter(self, delimiter):
+        self._delimiter = delimiter
         return self
     
     def get_all_fields(self):
@@ -64,7 +65,7 @@ class QueryBuilder(object):
         """ Bind value to a dynamic field.
         The value should be a string.
         """
-        self._bind_one(field, value)
+        self._bind_one(field, to_string(value))
         self._clean_cached_keys()
         return self
     
@@ -72,7 +73,7 @@ class QueryBuilder(object):
         """ Bind values to a dynamic field.
         The values should be a tuple/list which holds strings only.
         """
-        self._bind_multi(field, values)
+        self._bind_multi(field, to_strings(values))
         self._clean_cached_keys()
         return self
     

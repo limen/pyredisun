@@ -11,42 +11,23 @@ class StringModel(Model):
     def _init_query_builder(self):
         self._query_builder = querybuilder.QueryBuilder(['greeting', 'name', 'date'], ['name', 'date'], ':')
     
-    def create(self, value: str, ttl: int=0):
-        """ Set multi keys
-        parameters
-        - ttl 0 to keep original ttl, >0 to set new ttl
-        Return
-        dict {k1:<set rs>,k2:<set rs>,...}
-        """
-        lua = self._load_script('set')
-        resp = self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
-        return self._parse_set_multi_response(resp)
+    def create(self, value, ttl: int=0):
+        return self._create('set', value, ttl)
     
-    def create_xx(self, value: str, ttl: int=0):
-        """ Set the key only if it already exists
-        parameters
-        - ttl 0 to keep original ttl, >0 to set new ttl
-        Return
-        dict {k1:<set rs>,k2:<set rs>,...}
-        """
-        lua = self._load_script('setxx')
-        resp = self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
-        return self._parse_set_multi_response(resp)
+    def create_xx(self, value, ttl: int=0):
+        return self._create('setxx', value, ttl)
     
-    def create_nx(self, value: str, ttl: int=0):
-        """ Set the key only if it does not already exist
-        parameters
-        - ttl 0 to keep original ttl, >0 to set new ttl
-        Return
-        dict {k1:<set rs>,k2:<set rs>,...}
-        """
-        lua = self._load_script('setnx')
-        resp = self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
+    def create_nx(self, value, ttl: int=0):
+        return self._create('setnx', value, ttl)
+    
+    def _create(self, command, value, ttl):
+        lua = self._load_script(command)
+        resp = self._invoke_lua_script(lua, self.keys(), [to_string(value), self._ttl_in, ttl])
         return self._parse_set_multi_response(resp)
     
     def update(self, value: str, ttl: int=0):
-        """ Update the key
-        alias to setxx
+        """
+        Alias to create_xx
         """
         return self.create_xx(value, ttl)
     
@@ -62,7 +43,7 @@ class StringModel(Model):
         resp = self._call_lua_func(lua, [self.first_key()], [value, self._ttl_in, ttl])
         return self._parse_getset_response(resp)
     
-    def getset_all(self, value: str, ttl: int=0, with_ttl: bool=False):
+    def getset_all(self, value, ttl: int=0, with_ttl: bool=False):
         """ Get multi keys and set new value
         Parameters:
         - value <str>
@@ -71,7 +52,7 @@ class StringModel(Model):
         dict {k1:v1,k2:v2,...}
         """
         lua = self._load_script('getset_all')
-        resp = self._invoke_lua_script(lua, self.keys(), [value, self._ttl_in, ttl])
+        resp = self._invoke_lua_script(lua, self.keys(), [to_string(value), self._ttl_in, ttl])
         return self._parse_getset_multi_response(resp, with_ttl)
     
     def first(self, with_ttl: bool=False):

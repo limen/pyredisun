@@ -33,3 +33,18 @@ def expand_dict_to_list(dic):
 
 def wrap_dict_to_list(dic):
     return wrap_with_single_quote(expand_dict_to_list(dic))
+
+
+def to_string(value):
+    return value if isinstance(value, str) else str(value)
+
+
+def to_strings(values):
+    return [x if isinstance(x, str) else str(x) for x in values]
+
+
+def to_string_dict(dic):
+    string_dic = {}
+    for k in dic:
+        string_dic[k] = dic[k] if isinstance(dic[k], str) else str(dic[k])
+    return string_dic
